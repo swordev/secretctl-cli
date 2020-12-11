@@ -96,10 +96,9 @@ program
 					names: options.names,
 					keyNames: options.keys,
 					annotationConfigKey: options.annotationConfigKey,
-					data: options.force ? null : false,
 				},
 			})
-			await generateSecrets(secrets)
+			await generateSecrets(secrets, options.force)
 			if (!secrets.length)
 				console.log(colorize("grey", "No secrets found"))
 		})

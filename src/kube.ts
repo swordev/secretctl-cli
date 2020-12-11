@@ -22,6 +22,13 @@ export interface KubeSecretInterface {
 	configs: KubeSecretConfigInterface[]
 }
 
+export type FilterType = {
+	names?: string[]
+	annotationConfigKey?: string
+	keyNames?: string[]
+	keyData?: boolean
+}
+
 export function hasSecretKey(
 	resource: KubeSecretResourceInterface,
 	key: string
@@ -59,12 +66,7 @@ export function filterSecrets(options: {
 		items: KubeSecretResourceInterface[]
 	}
 	parseConfigs?: boolean
-	filter: {
-		names?: string[]
-		annotationConfigKey?: string
-		keyNames?: string[]
-		keyData?: boolean
-	}
+	filter: FilterType
 }) {
 	const result: KubeSecretInterface[] = []
 
@@ -141,12 +143,7 @@ export function filterSecrets(options: {
 
 export async function fetchSecrets(options: {
 	parseAnnotationConfigs?: boolean
-	filter: {
-		names?: string[]
-		keyNames?: string[]
-		annotationConfigKey?: string
-		data?: boolean
-	}
+	filter: FilterType
 }) {
 	const secrets: {
 		items: KubeSecretResourceInterface[]
@@ -159,12 +156,18 @@ export async function fetchSecrets(options: {
 	})
 }
 
-export async function generateSecrets(secrets: KubeSecretInterface[]) {
+export async function generateSecrets(
+	secrets: KubeSecretInterface[],
+	force?: boolean
+) {
 	for (const secret of secrets) {
 		if (!secret.configs) continue
 		const replaceKeys: string[] = []
 		const unencodedPasswords: string[] = []
 		const dataPatch = secret.configs.reduce((result, config) => {
+			if (!force && hasSecretKey(secret.resource, config.key))
+				return result
+
 			const [password, encoded] = gen(config)
 			if (config.encoding)
 				unencodedPasswords.push(
@@ -176,11 +179,15 @@ export async function generateSecrets(secrets: KubeSecretInterface[]) {
 			return result
 		}, {})
 
+		if (!Object.keys(dataPatch).length) continue
+
 		if (replaceKeys.length)
 			console.warn(
 				colorize(
 					"red",
-					`WARNING! The next secret keys will be replaced: ${replaceKeys.join}`
+					`WARNING! The next secret keys will be replaced: ${replaceKeys.join(
+						", "
+					)}`
 				)
 			)
 
