@@ -1,5 +1,5 @@
 {
-  "name": "@swordev/secretctl",
+  "name": "@swordev/secretctl-cli",
   "version": "1.0.0",
   "description": "CLI tool for managing secrets",
   "main": "lib/bin.js",
