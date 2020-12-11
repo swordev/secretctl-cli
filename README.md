@@ -49,7 +49,7 @@ kind: Secret
 metadata:
   name: sample
   annotations:
-  git.io/gen-secret: key1
+    git.io/gen-secret: key1
 type: Opaque
 ```
 
